@@ -1,0 +1,7 @@
+cargo run    # builds and runs
+cargo build  # builds
+cargo fmt    # formats
+cargo new    # creates new project in new directory
+cargo new --lib  # library project (to build a create)
+cargo new --bin  # binary project (to build an exectuable)
+cargo build --release # don't build in debug
