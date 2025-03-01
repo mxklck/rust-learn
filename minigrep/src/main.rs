@@ -7,12 +7,13 @@ fn main() {
     // to run use cargo run -- the poem.txt
     // IGNORE_CASE=1 cargo run -- to poem.txt
     // main should be kept concise so it's easy to verify by inspection (as we can't unit test it)
-    let args: Vec<String> = env::args().collect(); // collect() is used to convert the iterator into a collection
-                                                   // unwrap or else deals with the result unwrapping.
-    let config = Config::build(&args).unwrap_or_else(|err| {
+
+    // env::args() returns an iterator, which is lazy and won't execute until it is consumed
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {err}");
         process::exit(1);
     });
+
     // expect resolves the Result type and returns the value if it is Ok,
     // otherwise it panics with the message provided
 

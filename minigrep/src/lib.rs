@@ -13,14 +13,22 @@ impl Config {
     // new is expected to never fail, so we rename to build
     // 'static is a lifetime specifier,
     // which means that the reference will live for the entire duration of the program
-    pub fn build(args: &[String]) -> Result<Self, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments provided");
-        }
+    // mut args: impl Iterator<Item = String> is a trait bound
+    // it means that args has to be an iterator that yields strings
+    // take ownership (no reference), mutate it and consume it.
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Self, &'static str> {
+        args.next(); // moves the iterator to second element (first contains the program name)
 
-        // clone is used to create a new string from the reference
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+        // next returns an Option, so we can match on it
+        let query = match args.next() {
+            Some(args) => args,
+            None => return Err("No query string provided"), // return early with an Err variant of Result
+        };
+
+        let file_path = match args.next() {
+            Some(args) => args,
+            None => return Err("No file path provided"),
+        };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
 
@@ -52,29 +60,19 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 // lifetime specifier 'a denotes that the returned vector string slices will
 // live at least as long as the contents string
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        // lines() method returns an iterator
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-    results
+    // filter is an iterator adaptor that takes a closure and returns a new iterator
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 // not borrowed mutably because we don't want to modify the query
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase(); // we shadow the original query
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            // reference required as contains expects a string slice
-            results.push(line); // note we push the original line, not the lowercase one
-        }
-    }
-    results
+    contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .collect()
 }
 
 #[cfg(test)]
