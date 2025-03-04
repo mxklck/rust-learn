@@ -69,6 +69,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 
 // not borrowed mutably because we don't want to modify the query
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    // iterators are a zero-cost abstraction
     contents
         .lines()
         .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
